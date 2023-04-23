@@ -44,6 +44,7 @@ type NetworkCreateOptions struct {
 	DisableDNS        bool
 	Driver            string
 	Gateways          []net.IP
+	NoAutoGateway     bool
 	Internal          bool
 	Labels            map[string]string
 	MacVLAN           string

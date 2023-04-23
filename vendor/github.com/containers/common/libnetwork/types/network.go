@@ -54,6 +54,9 @@ type Network struct {
 	Routes []Route `json:"routes,omitempty"`
 	// IPv6Enabled if set to true an ipv6 subnet should be created for this net.
 	IPv6Enabled bool `json:"ipv6_enabled"`
+	// NoAutoGateway is whether Gateways should automatically be added to
+	// the network without being explicitly specified by the user
+	NoAutoGateway bool `json:"no_auto_gateway"`
 	// Internal is whether the Network should not have external routes
 	// to public or other Networks.
 	Internal bool `json:"internal"`

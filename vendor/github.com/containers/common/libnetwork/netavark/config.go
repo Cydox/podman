@@ -230,8 +230,8 @@ func (n *netavarkNetwork) networkCreate(newNetwork *types.Network, defaultNet bo
 		}
 	}
 
-	// add gateway when not internal or dns enabled
-	addGateway := !newNetwork.Internal || newNetwork.DNSEnabled
+	// add gateway when not internal or dns enabled and no-auto-gateway not set
+	addGateway := (!newNetwork.Internal || newNetwork.DNSEnabled) && (!newNetwork.NoAutoGateway)
 	err = internalutil.ValidateSubnets(newNetwork, addGateway, usedNetworks)
 	if err != nil {
 		return nil, err

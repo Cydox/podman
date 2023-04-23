@@ -54,6 +54,8 @@ func networkCreateFlags(cmd *cobra.Command) {
 	flags.IPSliceVar(&networkCreateOptions.Gateways, gatewayFlagName, nil, "IPv4 or IPv6 gateway for the subnet")
 	_ = cmd.RegisterFlagCompletionFunc(gatewayFlagName, completion.AutocompleteNone)
 
+	flags.BoolVar(&networkCreateOptions.NoAutoGateway, "no-auto-gateway", false, "do not automatically add gateways to subnets")
+
 	flags.BoolVar(&networkCreateOptions.Internal, "internal", false, "restrict external access from this network")
 
 	ipRangeFlagName := "ip-range"
@@ -127,6 +129,7 @@ func networkCreate(cmd *cobra.Command, args []string) error {
 		IPv6Enabled:       networkCreateOptions.IPv6,
 		DNSEnabled:        !networkCreateOptions.DisableDNS,
 		NetworkDNSServers: networkCreateOptions.NetworkDNSServers,
+		NoAutoGateway:     networkCreateOptions.NoAutoGateway,
 		Internal:          networkCreateOptions.Internal,
 		NetworkInterface:  networkCreateOptions.InterfaceName,
 	}

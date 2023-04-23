@@ -92,6 +92,11 @@ Enable IPv6 (Dual Stack) networking. If not subnets are given it will allocate a
 
 Set metadata for a network (e.g., --label mykey=value).
 
+#### **--no-auto-gateway**
+
+If set podman will not automatically add default gateways to subnets. Gateways can still be added
+manually either for a subnet or by creating a custom route using `--route`. This option is implied by `--internal`.
+
 #### **--opt**, **-o**=*option*
 
 Set driver specific options.
@@ -157,15 +162,21 @@ $ podman network create --subnet 192.168.55.0/24 --ip-range 192.168.55.128/25
 podman5
 ```
 
+Create a network with a static ipv4 and ipv6 subnet and set a gateway.
+```
+$ podman network create --subnet 192.168.55.0/24 --gateway 192.168.55.3 --subnet fd52:2a5a:747e:3acd::/64 --gateway fd52:2a5a:747e:3acd::10
+podman4
+```
+
 Create a network with a static subnet and a static route.
 ```
 $ podman network create --subnet 192.168.33.0/24 --route 10.1.0.0/24,192.168.33.10 newnet
 ```
 
-Create a network with a static ipv4 and ipv6 subnet and set a gateway.
+Create a network with a static subnet and a static route without a default
+gateway.
 ```
-$ podman network create --subnet 192.168.55.0/24 --gateway 192.168.55.3 --subnet fd52:2a5a:747e:3acd::/64 --gateway fd52:2a5a:747e:3acd::10
-podman4
+$ podman network create --no-auto-gateway --subnet 192.168.33.0/24 --route 10.1.0.0/24,192.168.33.10 newnet
 ```
 
 Create a Macvlan based network using the host interface eth0. Macvlan networks can only be used as root.

@@ -115,6 +115,10 @@ The `macvlan` and `ipvlan` driver support the following options:
   - Supported values for `macvlan` are `bridge`, `private`, `vepa`, `passthru`. Defaults to `bridge`.
   - Supported values for `ipvlan` are `l2`, `l3`, `l3s`. Defaults to `l2`.
 
+#### **--route**=*route*
+
+A static route in the format \<destination in CIDR notaion>,\<gateway>,\<route metric (optional)>. This route will be added to every container in this network. Only available with the netavark backend. Can be specified multiple times if more than one static route is desired.
+
 #### **--subnet**=*subnet*
 
 The subnet in CIDR notation. Can be specified multiple times to allocate more than one subnet for this network.
@@ -151,6 +155,11 @@ Create a network that uses a *192.168.55.0/24** subnet and has an IP address ran
 ```
 $ podman network create --subnet 192.168.55.0/24 --ip-range 192.168.55.128/25
 podman5
+```
+
+Create a network with a static subnet and a static route.
+```
+$ podman network create --subnet 192.168.33.0/24 --route 10.1.0.0/24,192.168.33.10 newnet
 ```
 
 Create a network with a static ipv4 and ipv6 subnet and set a gateway.

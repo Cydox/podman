@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"strconv"
+	"strings"
 
 	"github.com/containers/common/libnetwork/types"
 	"github.com/containers/common/libnetwork/util"
@@ -76,6 +78,10 @@ func networkCreateFlags(cmd *cobra.Command) {
 	subnetFlagName := "subnet"
 	flags.StringArrayVar(&networkCreateOptions.Subnets, subnetFlagName, nil, "subnets in CIDR format")
 	_ = cmd.RegisterFlagCompletionFunc(subnetFlagName, completion.AutocompleteNone)
+
+	routeFlagName := "route"
+	flags.StringArrayVar(&networkCreateOptions.Routes, routeFlagName, nil, "static routes")
+	_ = cmd.RegisterFlagCompletionFunc(routeFlagName, completion.AutocompleteNone)
 
 	interfaceFlagName := "interface-name"
 	flags.StringVar(&networkCreateOptions.InterfaceName, interfaceFlagName, "", "interface name which is used by the driver")
@@ -176,6 +182,18 @@ func networkCreate(cmd *cobra.Command, args []string) error {
 		return errors.New("cannot set gateway or range without subnet")
 	}
 
+	for i := range networkCreateOptions.Routes {
+
+		route, err := parseRoute(networkCreateOptions.Routes[i])
+
+		if err != nil {
+			return err
+		}
+
+		network.Routes = append(network.Routes, *route)
+
+	}
+
 	extraCreateOptions := types.NetworkCreateOptions{
 		IgnoreIfExists: networkCreateOptions.IgnoreIfExists,
 	}
@@ -186,6 +204,48 @@ func networkCreate(cmd *cobra.Command, args []string) error {
 	}
 	fmt.Println(response.Name)
 	return nil
+}
+
+func parseRoute(route_str string) (*types.Route, error) {
+	s := strings.Split(route_str, ",")
+	var metric *int = nil
+
+	if len(s) == 2 || len(s) == 3 {
+
+		dst_str := s[0]
+		gw_str := s[1]
+
+		destination, err := types.ParseCIDR(dst_str)
+		gateway := net.ParseIP(gw_str)
+
+		if err != nil {
+			return nil, fmt.Errorf("invalid route destination %s", dst_str)
+		}
+
+		if gateway == nil {
+			return nil, fmt.Errorf("invalid route gateway %s", gw_str)
+		}
+
+		if len(s) == 3 {
+			mtr, err := strconv.Atoi(s[2])
+			metric = &mtr
+
+			if err != nil {
+				return nil, fmt.Errorf("invalid route metric %s", s[2])
+			}
+		}
+
+		r := types.Route{
+			Destination: destination,
+			Gateway:     gateway,
+			Metric:      metric,
+		}
+
+		return &r, nil
+
+	} else {
+		return nil, fmt.Errorf("invalid route: %s\nFormat: --route <destination in CIDR>,<gateway>,<metric (optional)>", route_str)
+	}
 }
 
 func parseRange(iprange string) (*types.LeaseRange, error) {

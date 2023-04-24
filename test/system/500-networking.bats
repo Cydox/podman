@@ -86,6 +86,37 @@ load helpers.network
     run_podman rm myweb
 }
 
+@test "podman network - static routes" {
+
+    # Test with one ipv4 and one ipv6 subnet and one route each including one metric.
+    run_podman network create --subnet 10.90.0.0/24 --subnet fd10:89:b::/64 \
+     --route 10.91.0.0/24,10.90.0.250,120 --route fd10:90:b::/64,fd10:89:b::ac12 testnet
+    assert "$output" =~ "testnet"
+    run_podman run --rm -it --network testnet $IMAGE ip route
+    assert "$output" =~ "10.91.0.0/24 via 10.90.0.250"
+    assert "$output" =~ "metric 120"
+    assert "$output" =~ "default via 10.90.0.1"
+    run_podman run --rm -it --network testnet $IMAGE ip -6 route
+    assert "$output" =~ "fd10:90:b::/64 via fd10:89:b::ac12"
+    assert "$output" =~ "metric 100"
+    assert "$output" =~ "default via fd10:89:b::1"
+
+    run_podman network rm testnet
+
+    # Same test, this time with the --no-auto-gateway option. Check that there is no default route.
+    run_podman network create --no-auto-gateway --subnet 10.90.0.0/24 --subnet fd10:89:b::/64 \
+    --route 10.91.0.0/24,10.90.0.250,120 --route fd10:90:b::/64,fd10:89:b::ac12 testnet
+    assert "$output" =~ "testnet"
+    run_podman run --rm -it --network testnet $IMAGE ip route
+    assert "$output" =~ "10.91.0.0/24 via 10.90.0.250"
+    assert "$output" =~ "metric 120"
+    assert "$output" !~ "default"
+    run_podman run --rm -it --network testnet $IMAGE ip -6 route
+    assert "$output" =~ "fd10:90:b::/64 via fd10:89:b::ac12"
+    assert "$output" =~ "metric 100"
+    assert "$output" !~ "default"
+}
+
 # Issue #5466 - port-forwarding doesn't work with this option and -d
 @test "podman networking: port with --userns=keep-id for rootless or --uidmap=* for rootful" {
     skip_if_cgroupsv1 "FIXME: #15025: run --uidmap fails on cgroups v1"
